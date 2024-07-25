@@ -68,10 +68,10 @@ void loop(){
 
     //CORRIGIR AMANHA COM O PROFESSOR
     if(cont == 52){
-        acimaDaCapacidade()
+        acimaDaCapacidade();
     }
 
-    if (digitaRead(chave) == 0)
+    if (digitalRead(chave) == 0)
     {
        finalViagem();
     }
@@ -151,6 +151,15 @@ void ledsCapacidade(){
 void finalViagem(){
      valorGanho = quantPagantes * 4;
      int vPerdido = valorPerdido * 4;
+
+         visor.setCursor(0, 0);
+        visor.print("       "); 
+        visor.setCursor(8, 0);
+        visor.print("      ");
+        visor.setCursor(0, 1);
+        visor.print("      ");
+        visor.setCursor(8, 1);
+        visor.print("      ");
 
         visor.setCursor(0, 0);
         visor.print("V.Ganho"); 
