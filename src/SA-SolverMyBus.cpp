@@ -21,9 +21,10 @@ byte down[] = {
     B00100,
     B00000};
 
-int cont = 35;         // contador de capacidade
-int quantPagantes = 0; // Variavel para calcular valor ganho
-int quantPerd = 0;     // Variavel para calcular valor perdido ao final da linha
+int cont = 0;             // contador de capacidade
+int quantPagantes = 0;    // Variavel para calcular valor ganho
+int quantNaoPagantes = 0; // Para calcular os isentos
+int quantPerd = 0;        // Variavel para calcular valor perdido ao final da linha
 int chave = 13;
 int valorChaveLigada = 0;
 int ledAzul = 8;
@@ -31,13 +32,14 @@ int ledAmarelo = 9;
 int ledVermelho = 10;
 int valorGanho = 0;
 int valorPerdido = 0;
-int botaoDeExcesso = 0;
-int botaoNaoPagantes = 0;
+int botaoDeExcesso = 2;
+int botaoNaoPagantes = 7;
 int nextState = 0; // estado da seta
 int prevState = 0;
 int tela = 0;
 int test = 0;
 
+const int capacidadeMaxima = 52;
 // porta 5 e 6 sensor de entrada || porta 3 e 4 sensor de saida
 const int PIN_ECHO = 5;
 const int PIN_TRIGG = 6;
@@ -59,13 +61,14 @@ void setup()
     pinMode(ledAmarelo, OUTPUT);
     pinMode(ledVermelho, OUTPUT);
     pinMode(botaoDeExcesso, INPUT);
+    pinMode(botaoNaoPagantes, INPUT);
 
     pinMode(PIN_TRIGG, OUTPUT);
     pinMode(PIN_ECHO, INPUT);
 
     pinMode(PIN_TRIGG1, OUTPUT);
     pinMode(PIN_ECHO1, INPUT);
-  
+
     pinMode(NEXT, INPUT);
     pinMode(PREV, INPUT);
 
@@ -81,20 +84,21 @@ void setup()
 void loop()
 {
     valorChaveLigada = digitalRead(chave);
-    
-	if (digitalRead(chave) == 1){
-      ledsCapacidade();
-      sensorHC();  
-      sensorSaidaHC(); 
+
+    if (digitalRead(chave) == 1)
+    {
+        ledsCapacidade();
+        sensorHC();
+        sensorSaidaHC();
+        naoPagantes();
     }
 
-    // CORRIGIR AMANHA COM O PROFESSOR
-    if (cont == 52)
+    if (cont == capacidadeMaxima)
     {
         acimaDaCapacidade();
     }
-  
-  nextState = digitalRead(NEXT);
+
+    nextState = digitalRead(NEXT);
     prevState = digitalRead(PREV);
 
     if (nextState == HIGH)
@@ -134,6 +138,7 @@ void sensorHC()
 
     // distancia = (velocidadeSomNoAr / 2) * duracao;
     float distancia = valReferencia * duracao;
+    Serial.println(distancia);
 
     if (distancia < 336 && objPresente == false)
     {
@@ -142,8 +147,12 @@ void sensorHC()
     else if (distancia >= 336 && objPresente == true)
     {
         objPresente = false;
-        cont++;
-        quantPagantes++;
+        if (cont < capacidadeMaxima)
+        {
+            cont++;
+            quantPagantes++;
+            valorGanho = (quantPagantes * 4) - (quantNaoPagantes * 4);
+        }
     }
 }
 
@@ -192,19 +201,20 @@ void ledsCapacidade()
         digitalWrite(ledVermelho, HIGH);
 
         visor.setCursor(0, 0);
-        visor.print(0, 0);
         visor.print("Onibus Lotado");
     }
 }
 // configurações da tela
 void mostraSeta()
 {
-  	Serial.println(tela);
+    Serial.println(tela);
     if (tela == 0)
     {
         visor.setCursor(0, 1);
         visor.write(0);
-    }else{
+    }
+    else
+    {
         visor.setCursor(0, 0);
         visor.write(byte(0));
         visor.setCursor(0, 1);
@@ -213,19 +223,20 @@ void mostraSeta()
 }
 
 void mostrar()
-{	
-  	
-    if (tela == 0){
-       	visor.setCursor(0,0);
-        visor.print(1, 0);
+{
+
+    if (tela == 0)
+    {
+        visor.setCursor(0, 0);
         visor.print("Contagem");
         visor.setCursor(1, 1);
         visor.print(cont);
         visor.setCursor(9, 1);
         visor.print("CAP: 52");
     }
-    else{
-      
+    else if (tela == 1)
+    {
+
         visor.setCursor(1, 0);
         visor.print("V.Ganho");
         visor.setCursor(8, 0);
@@ -235,19 +246,35 @@ void mostrar()
         visor.setCursor(8, 1);
         visor.print(valorPerdido);
     }
-    
+    else if (tela == 2)
+    {
+        visor.setCursor(1, 0);
+        visor.print("N.Pagantes");
+        visor.setCursor(13, 0);
+        visor.print(quantNaoPagantes);
+    }
 }
 
-
-// CORRIGIR AMANHA COM O PROFESSOR
 void acimaDaCapacidade()
 {
-    botaoDeExcesso = digitalRead(2);
+    int botao = digitalRead(botaoDeExcesso);
 
-    if (botaoDeExcesso == HIGH)
+    if (botao == HIGH)
     {
 
         quantPerd++;
+        delay(10);
+    }
+}
+
+void naoPagantes()
+{
+    int botao = digitalRead(botaoNaoPagantes);
+
+    if (botao == HIGH)
+    {
+
+        quantNaoPagantes++;
         delay(10);
     }
 }
